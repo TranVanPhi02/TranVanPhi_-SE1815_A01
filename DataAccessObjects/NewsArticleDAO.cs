@@ -18,7 +18,11 @@ namespace DataAccessObjects
 
                 using var db = new FunewsManagementContext();
 
-                listNewsArticles = db.NewsArticles.Include(a => a.Category).ToList();
+                listNewsArticles = db.NewsArticles
+                             .Include(a => a.Category)    
+                             .Include(a => a.CreatedBy)  
+                             .Include(a => a.Tags)        
+                             .ToList();
 
             }
             catch (Exception e) { }
