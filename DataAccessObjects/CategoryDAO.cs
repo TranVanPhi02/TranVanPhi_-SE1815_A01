@@ -54,22 +54,37 @@ namespace DataAccessObjects
 
             }
 
-            public static void DeleteCategory(Category category)
+        public static void DeleteCategory(Category category)
+        {
+            try
             {
-                try
-                {
-                    using var context = new FunewsManagementContext();
-                    var categoryList = context.Categories.SingleOrDefault(c => c.CategoryId == category.CategoryId);
-                    context.Categories.Remove(categoryList);
-                    context.SaveChanges();
-                }
-                catch (Exception e)
-                {
-                    throw new Exception(e.Message);
-                }
-            }
+                using var context = new FunewsManagementContext();
 
-            public static Category GetCategoryById(int id)
+                var categoryInUse = context.NewsArticles.Any(na => na.CategoryId == category.CategoryId);
+
+                if (categoryInUse)
+                {
+                    throw new Exception("Cannot delete this category because it is associated with one or more news articles.");
+                }
+
+                var categoryToDelete = context.Categories.SingleOrDefault(c => c.CategoryId == category.CategoryId);
+
+                if (categoryToDelete == null)
+                {
+                    throw new Exception("Category not found.");
+                }
+
+                context.Categories.Remove(categoryToDelete);
+                context.SaveChanges();
+            }
+            catch (Exception e)
+            {
+                throw new Exception($"Error deleting category: {e.Message}");
+            }
+        }
+
+
+        public static Category GetCategoryById(int id)
             {
                 using var db = new FunewsManagementContext();
                 return db.Categories.FirstOrDefault(c => c.CategoryId.Equals(id));

@@ -80,7 +80,7 @@ namespace TranVanPhiMVC.Controllers
             else
             {
                 ViewBag.ErrorMessage = "Invalid email or password!";
-                return View();  // Stay on the Login page if authentication fails
+                return View();  
             }
         }
         // Register GET action
@@ -160,7 +160,6 @@ namespace TranVanPhiMVC.Controllers
         [HttpPost]
         public async Task<IActionResult> Logout()
         {
-            // Sign out the user by clearing the authentication cookie
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
 
             return RedirectToAction("Login", "Authenticate");

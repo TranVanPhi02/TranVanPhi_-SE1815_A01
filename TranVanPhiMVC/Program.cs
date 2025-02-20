@@ -17,13 +17,14 @@ builder.Services.AddScoped<ISystemAccountRepository, SystemAccountRepository>();
 builder.Services.AddScoped<SystemAccountDAO>();
 
 
-// Add authentication and cookie authentication
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                 .AddCookie(options =>
                 {
-                    options.LoginPath = "/Authenticate/Login"; // Set the login path
-                    options.LogoutPath = "/Authenticate/Logout"; // Set the logout path
+                    options.LoginPath = "/Authenticate/Login"; 
+                    options.LogoutPath = "/Authenticate/Logout";
+          
                 });
+
 
 builder.Services.AddDbContext<FunewsManagementContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));

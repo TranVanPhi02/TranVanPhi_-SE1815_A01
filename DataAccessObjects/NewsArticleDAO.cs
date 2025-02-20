@@ -64,15 +64,42 @@ namespace DataAccessObjects
             try
             {
                 using var context = new FunewsManagementContext();
-                var newsArticleList = context.NewsArticles.SingleOrDefault(a => a.NewsArticleId == newsArticle.NewsArticleId);
-                context.NewsArticles.Remove(newsArticleList);
-                context.SaveChanges();
+
+            
+                var newsArticleToDelete = context.NewsArticles
+                    .Include(a => a.Tags)   
+                    .Include(a => a.Category) 
+                    .SingleOrDefault(a => a.NewsArticleId == newsArticle.NewsArticleId);
+
+              
+                if (newsArticleToDelete != null)
+                {
+               
+                    foreach (var tag in newsArticleToDelete.Tags.ToList())
+                    {
+                        context.Tags.Remove(tag);
+                    }
+                   
+                    if (newsArticleToDelete.Category != null)
+                    {
+                        context.Categories.Remove(newsArticleToDelete.Category); 
+                    }
+       
+                    context.NewsArticles.Remove(newsArticleToDelete);
+
+                    context.SaveChanges();
+                }
+                else
+                {
+                    throw new Exception("News article not found.");
+                }
             }
             catch (Exception e)
             {
-                throw new Exception(e.Message);
+                throw new Exception("Error deleting news article: " + e.Message);
             }
         }
+
 
         public static NewsArticle GetNewsArticleById(int id)
         {

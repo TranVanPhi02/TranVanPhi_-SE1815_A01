@@ -120,7 +120,6 @@ namespace TranVanPhiMVC.Controllers
             ViewData["ParentCategoryId"] = new SelectList(_context.Categories, "CategoryId", "CategoryDesciption", category.ParentCategoryId);
             return View(category);
         }
-
         // GET: Categories/Delete/5
         public async Task<IActionResult> Delete(short? id)
         {
@@ -132,28 +131,47 @@ namespace TranVanPhiMVC.Controllers
             var category = await _context.Categories
                 .Include(c => c.ParentCategory)
                 .FirstOrDefaultAsync(m => m.CategoryId == id);
+
             if (category == null)
             {
                 return NotFound();
             }
 
-            return View(category);
+            var categoryInUse = await _context.NewsArticles.AnyAsync(na => na.CategoryId == category.CategoryId);
+            if (categoryInUse)
+            {
+                ViewBag.ErrorMessage = "This category cannot be deleted because it is in use by one or more news articles.";
+                return View(category);  
+            }
+
+            return View(category);  
         }
 
         // POST: Categories/Delete/5
-        [HttpPost, ActionName("Delete")]
+        [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(short id)
         {
             var category = await _context.Categories.FindAsync(id);
+
             if (category != null)
             {
+            
+                var categoryInUse = await _context.NewsArticles.AnyAsync(na => na.CategoryId == category.CategoryId);
+                if (categoryInUse)
+                {
+                    ViewBag.ErrorMessage = "This category cannot be deleted because it is in use by one or more news articles.";
+                    return View("Delete", category);  
+                }
+
                 _context.Categories.Remove(category);
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
             }
 
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+            return NotFound();
         }
+
 
         private bool CategoryExists(short id)
         {

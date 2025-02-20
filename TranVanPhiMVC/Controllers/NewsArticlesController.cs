@@ -147,19 +147,36 @@ namespace TranVanPhiMVC.Controllers
         }
 
         // POST: NewsArticles/Delete/5
-        [HttpPost, ActionName("Delete")]
+        [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(string id)
         {
-            var newsArticle = await _context.NewsArticles.FindAsync(id);
+            var newsArticle = await _context.NewsArticles
+                .Include(na => na.Tags)
+                .Include(na => na.Category)
+                .FirstOrDefaultAsync(na => na.NewsArticleId == id);
+
             if (newsArticle != null)
             {
+                foreach (var tag in newsArticle.Tags.ToList())
+                {
+                    _context.Tags.Remove(tag);
+                }
+
+                if (newsArticle.Category != null)
+                {
+                    _context.Categories.Remove(newsArticle.Category);
+                }
+
                 _context.NewsArticles.Remove(newsArticle);
+
+                await _context.SaveChangesAsync();
             }
 
-            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
+
+
 
         private bool NewsArticleExists(string id)
         {
