@@ -1,4 +1,5 @@
-﻿using System;
+﻿using BusinessObjects;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,5 +9,9 @@ namespace Repositories
 {
     public interface ISystemAccountRepository
     {
+        Task<SystemAccount> GetAccountByEmailAsync(string email);
+        Task AddOrUpdateAccountAsync(SystemAccount account);
+        Task<SystemAccount> GetProfileAsync(short accountId);
+        Task EditProfileAsync(SystemAccount updatedAccount);
     }
 }

@@ -1,5 +1,8 @@
 using BusinessObjects;
+using DataAccessObjects;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
+using Repositories;
 using Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,6 +12,18 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<INewsArticleService, NewsArticleService>();
 builder.Services.AddScoped<ITagService, TagService>();
+builder.Services.AddScoped<ISystemAccountService, SystemAccountService>();
+builder.Services.AddScoped<ISystemAccountRepository, SystemAccountRepository>();
+builder.Services.AddScoped<SystemAccountDAO>();
+
+
+// Add authentication and cookie authentication
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+                .AddCookie(options =>
+                {
+                    options.LoginPath = "/Authenticate/Login"; // Set the login path
+                    options.LogoutPath = "/Authenticate/Logout"; // Set the logout path
+                });
 
 builder.Services.AddDbContext<FunewsManagementContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -27,11 +42,12 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
-
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+    pattern: "{controller=Authenticate}/{action=Login}/{id?}");
+
 
 app.Run();

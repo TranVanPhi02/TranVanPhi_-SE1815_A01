@@ -1,0 +1,19 @@
+﻿@model BusinessObjects.SystemAccount
+
+<h2>Edit Profile</h2>
+
+<form method="post">
+    <div class="form-group">
+        <label for="AccountName">Name</label>
+        <input type="text" class="form-control" id="AccountName" name="AccountName" value="@Model.AccountName" required />
+    </div>
+    <div class="form-group">
+        <label for="AccountEmail">Email</label>
+        <input type="email" class="form-control" id="AccountEmail" name="AccountEmail" value="@Model.AccountEmail" required />
+    </div>
+    <div class="form-group">
+        <label for="AccountPassword">Password</label>
+        <input type="password" class="form-control" id="AccountPassword" name="AccountPassword" placeholder="Leave empty if you don't want to change it" />
+    </div>
+    <button type="submit" class="btn btn-primary">Save Changes</button>
+</form>
