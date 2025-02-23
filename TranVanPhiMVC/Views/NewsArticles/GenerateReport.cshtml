@@ -1,0 +1,51 @@
+﻿@{
+    ViewData["Title"] = "Generate Report";
+}
+
+<h1>Generate Report</h1>
+
+<form method="post" asp-action="GenerateReport">
+    <div class="form-group">
+        <label for="startDate">Start Date</label>
+        <input type="date" id="startDate" name="startDate" class="form-control" required />
+    </div>
+    <div class="form-group">
+        <label for="endDate">End Date</label>
+        <input type="date" id="endDate" name="endDate" class="form-control" required />
+    </div>
+    <button type="submit" class="btn btn-primary">Generate Report</button>
+</form>
+
+@if (ViewBag.Message != null)
+{
+    <div class="alert alert-warning">
+        @ViewBag.Message
+    </div>
+}
+
+@if (Model != null && Model.Any())
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Headline</th>
+                <th>Created Date</th>
+                <th>Category</th>
+                <th>Created By</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.NewsTitle</td>
+                    <td>@item.Headline</td>
+                    <td>@item.CreatedDate</td>
+                    <td>@item.Category?.CategoryDesciption</td>
+                    <td>@item.CreatedBy?.AccountName</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

@@ -13,5 +13,9 @@ namespace Repositories
         Task AddOrUpdateAccountAsync(SystemAccount account);
         Task<SystemAccount> GetProfileAsync(short accountId);
         Task EditProfileAsync(SystemAccount updatedAccount);
+        Task<IQueryable<SystemAccount>> GetAllAccountsAsync();
+        Task DisableUserAsync(short accountId);
+        Task EnableUserAsync(short accountId);
+        Task<bool> IsUserDisabledAsync(short accountId);
     }
 }

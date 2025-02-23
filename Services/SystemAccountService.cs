@@ -7,7 +7,7 @@ namespace Services
     public class SystemAccountService : ISystemAccountService
     {
         private readonly ISystemAccountRepository _systemAccountRepository;
-
+        private static readonly HashSet<short> DisabledUserIds = new HashSet<short>();
         public SystemAccountService(ISystemAccountRepository systemAccountRepository)
         {
             _systemAccountRepository = systemAccountRepository;
@@ -24,27 +24,55 @@ namespace Services
             return await _systemAccountRepository.GetAccountByEmailAsync(email);
         }
 
+        public async Task<IQueryable<SystemAccount>> GetAllAccountsAsync()
+        {
+            var accounts = await _systemAccountRepository.GetAllAccountsAsync();
+            return accounts ?? Enumerable.Empty<SystemAccount>().AsQueryable();
+
+        }
+
         public async Task<SystemAccount> GetProfileAsync(short accountId)
         {
             return await _systemAccountRepository.GetProfileAsync(accountId);
         }
 
-        // Login 
         public async Task<SystemAccount> LoginAsync(string email, string password)
         {
             var account = await _systemAccountRepository.GetAccountByEmailAsync(email);
-            if (account != null && account.AccountPassword == password)
+
+            if (account == null || account.AccountPassword != password)
             {
-                return account;
+                return null; 
             }
 
-            return null; // Return null if login failed
+            if (await IsUserDisabledAsync(account.AccountId))
+            {
+                throw new UnauthorizedAccessException("Account is disabled"); 
+            }
+
+            return account;
         }
+
 
         // Register (used for Admin, Staff, Lecturer)
         public async Task RegisterAsync(SystemAccount account)
         {
             await _systemAccountRepository.AddOrUpdateAccountAsync(account);
+        }
+
+        public async Task DisableUserAsync(short accountId)
+        {
+            await _systemAccountRepository.DisableUserAsync(accountId);
+        }
+
+        public async Task EnableUserAsync(short accountId)
+        {
+            await _systemAccountRepository.EnableUserAsync(accountId);
+        }
+
+        public async Task<bool> IsUserDisabledAsync(short accountId)
+        {
+            return await _systemAccountRepository.IsUserDisabledAsync(accountId);
         }
     }
 }

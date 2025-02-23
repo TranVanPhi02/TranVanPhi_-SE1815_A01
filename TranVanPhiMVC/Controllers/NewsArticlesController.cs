@@ -6,24 +6,35 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using BusinessObjects;
+using Microsoft.AspNetCore.Authorization;
+using Services;
 
 namespace TranVanPhiMVC.Controllers
 {
     public class NewsArticlesController : Controller
     {
         private readonly FunewsManagementContext _context;
+        private readonly INewsArticleService _newsArticleService;
 
-        public NewsArticlesController(FunewsManagementContext context)
+        public NewsArticlesController(FunewsManagementContext context, INewsArticleService newsArticleService)
         {
             _context = context;
+            _newsArticleService = newsArticleService ?? throw new ArgumentNullException(nameof(newsArticleService)); // Add null check here for better debugging
         }
+
 
         // GET: NewsArticles
         public async Task<IActionResult> Index()
         {
-            var funewsManagementContext = _context.NewsArticles.Include(n => n.Category).Include(n => n.CreatedBy);
+            var funewsManagementContext = _context.NewsArticles
+                .Include(n => n.Category)
+                .Include(n => n.CreatedBy)
+                .Include(n => n.NewsTags) 
+                    .ThenInclude(nt => nt.Tag); 
+
             return View(await funewsManagementContext.ToListAsync());
         }
+
 
         // GET: NewsArticles/Details/5
         public async Task<IActionResult> Details(string id)
@@ -151,32 +162,40 @@ namespace TranVanPhiMVC.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(string id)
         {
-            var newsArticle = await _context.NewsArticles
-                .Include(na => na.Tags)
-                .Include(na => na.Category)
-                .FirstOrDefaultAsync(na => na.NewsArticleId == id);
-
-            if (newsArticle != null)
+            if (string.IsNullOrEmpty(id))
             {
-                foreach (var tag in newsArticle.Tags.ToList())
-                {
-                    _context.Tags.Remove(tag);
-                }
-
-                if (newsArticle.Category != null)
-                {
-                    _context.Categories.Remove(newsArticle.Category);
-                }
-
-                _context.NewsArticles.Remove(newsArticle);
-
-                await _context.SaveChangesAsync();
+                TempData["ErrorMessage"] = "Invalid news article ID.";
+                return RedirectToAction(nameof(Index));
             }
 
+            var newsArticle = await _context.NewsArticles
+                .Include(na => na.NewsTags)
+                .ThenInclude(nt => nt.Tag) // Bao gồm Tag để tránh lỗi khi xóa
+                .FirstOrDefaultAsync(na => na.NewsArticleId == id);
+
+            if (newsArticle == null)
+            {
+                TempData["ErrorMessage"] = $"The news article with ID {id} does not exist.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Xóa tất cả các NewsTag liên quan trước khi xóa NewsArticle
+            if (newsArticle.NewsTags != null && newsArticle.NewsTags.Any())
+            {
+                _context.NewsTags.RemoveRange(newsArticle.NewsTags);
+            }
+
+            // Xóa NewsArticle
+            _context.NewsArticles.Remove(newsArticle);
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "News article deleted successfully.";
             return RedirectToAction(nameof(Index));
         }
 
 
+
+ 
 
         private bool NewsArticleExists(string id)
         {

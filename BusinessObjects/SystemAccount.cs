@@ -14,6 +14,7 @@ public partial class SystemAccount
     public int? AccountRole { get; set; }
 
     public string? AccountPassword { get; set; }
+    public bool IsDisabled { get; set; } = false;
 
     public virtual ICollection<NewsArticle> NewsArticles { get; set; } = new List<NewsArticle>();
 }

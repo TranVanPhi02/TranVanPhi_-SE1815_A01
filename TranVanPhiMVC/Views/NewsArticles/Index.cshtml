@@ -4,86 +4,123 @@
     ViewData["Title"] = "Index";
 }
 
-<h1>Index</h1>
+<h1>News Articles</h1>
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+
 
 <p>
-    <a asp-action="Create">Create New</a>
+    @if (User.IsInRole("Admin") || User.IsInRole("Staff"))
+    {
+        <a asp-action="Create">Create New</a>
+    }
 </p>
 <table class="table">
     <thead>
         <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.NewsTitle)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Headline)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CreatedDate)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.NewsContent)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.NewsSource)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.NewsStatus)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.UpdatedById)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.ModifiedDate)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Category)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CreatedBy)
-            </th>
+            <th>@Html.DisplayNameFor(model => model.NewsTitle)</th>
+            <th>@Html.DisplayNameFor(model => model.Headline)</th>
+            <th>@Html.DisplayNameFor(model => model.CreatedDate)</th>
+            <th>@Html.DisplayNameFor(model => model.NewsContent)</th>
+            <th>@Html.DisplayNameFor(model => model.NewsSource)</th>
+            <th>@Html.DisplayNameFor(model => model.NewsStatus)</th>
+            <th>@Html.DisplayNameFor(model => model.UpdatedById)</th>
+            <th>@Html.DisplayNameFor(model => model.ModifiedDate)</th>
+            <th>@Html.DisplayNameFor(model => model.Category)</th>
+            <th>@Html.DisplayNameFor(model => model.CreatedBy)</th>
+            <th>Tags</th> <!-- Thêm cột Tags -->
             <th></th>
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.NewsTitle)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Headline)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CreatedDate)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.NewsContent)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.NewsSource)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.NewsStatus)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.UpdatedById)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.ModifiedDate)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Category.CategoryDesciption)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CreatedBy.AccountId)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.NewsArticleId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.NewsArticleId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.NewsArticleId">Delete</a>
-            </td>
-        </tr>
-}
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@Html.DisplayFor(modelItem => item.NewsTitle)</td>
+                <td>@Html.DisplayFor(modelItem => item.Headline)</td>
+                <td>@Html.DisplayFor(modelItem => item.CreatedDate)</td>
+                <td>@Html.DisplayFor(modelItem => item.NewsContent)</td>
+                <td>@Html.DisplayFor(modelItem => item.NewsSource)</td>
+                <td>@Html.DisplayFor(modelItem => item.NewsStatus)</td>
+                <td>@Html.DisplayFor(modelItem => item.UpdatedById)</td>
+                <td>@Html.DisplayFor(modelItem => item.ModifiedDate)</td>
+                <td>@Html.DisplayFor(modelItem => item.Category.CategoryDesciption)</td>
+                <td>@Html.DisplayFor(modelItem => item.CreatedBy.AccountId)</td>
+
+                <!-- Hiển thị danh sách TagName -->
+                <td>
+                    @if (item.NewsTags != null && item.NewsTags.Any())
+                    {
+                        @string.Join(", ", item.NewsTags.Select(nt => nt.Tag.TagName))
+                    }
+                    else
+                    {
+                        <span>No Tags</span>
+                    }
+                </td>
+
+                <td>
+                    @if (User.IsInRole("Admin") || User.IsInRole("Staff"))
+                    {
+                        <a asp-action="Edit" asp-route-id="@item.NewsArticleId">Edit</a>
+
+                        <a asp-action="Delete" asp-route-id="@item.NewsArticleId"> Delete </a>
+                    }
+                    <a asp-action="Details" asp-route-id="@item.NewsArticleId">Details</a>
+                </td>
+            </tr>
+        }
     </tbody>
 </table>
+
+@* <table class="table">
+    <thead>
+        <tr>
+            <th>@Html.DisplayNameFor(model => model.NewsTitle)</th>
+            <th>@Html.DisplayNameFor(model => model.Headline)</th>
+            <th>@Html.DisplayNameFor(model => model.CreatedDate)</th>
+            <th>@Html.DisplayNameFor(model => model.NewsContent)</th>
+            <th>@Html.DisplayNameFor(model => model.NewsSource)</th>
+            <th>@Html.DisplayNameFor(model => model.NewsStatus)</th>
+            <th>@Html.DisplayNameFor(model => model.UpdatedById)</th>
+            <th>@Html.DisplayNameFor(model => model.ModifiedDate)</th>
+            <th>@Html.DisplayNameFor(model => model.Category)</th>
+            <th>@Html.DisplayNameFor(model => model.CreatedBy)</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@Html.DisplayFor(modelItem => item.NewsTitle)</td>
+                <td>@Html.DisplayFor(modelItem => item.Headline)</td>
+                <td>@Html.DisplayFor(modelItem => item.CreatedDate)</td>
+                <td>@Html.DisplayFor(modelItem => item.NewsContent)</td>
+                <td>@Html.DisplayFor(modelItem => item.NewsSource)</td>
+                <td>@Html.DisplayFor(modelItem => item.NewsStatus)</td>
+                <td>@Html.DisplayFor(modelItem => item.UpdatedById)</td>
+                <td>@Html.DisplayFor(modelItem => item.ModifiedDate)</td>
+                <td>@Html.DisplayFor(modelItem => item.Category.CategoryDesciption)</td>
+                <td>@Html.DisplayFor(modelItem => item.CreatedBy.AccountId)</td>
+                <td>
+                    @if (User.IsInRole("Admin") || User.IsInRole("Staff"))
+                    {
+                    <a asp-action="Edit" asp-route-id="@item.NewsArticleId">Edit</a> 
+
+                    <a asp-action = "Delete" asp-route-id = "@item.NewsArticleId"> Delete </a>
+                    }
+                    <a asp-action="Details" asp-route-id="@item.NewsArticleId">Details</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+ *@

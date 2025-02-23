@@ -10,6 +10,12 @@ namespace DataAccessObjects
 {
     public class NewsArticleDAO
     {
+        private readonly FunewsManagementContext _context;
+
+        public NewsArticleDAO(FunewsManagementContext context)
+        {
+            _context = context;
+        }
         public static List<NewsArticle> GetNewsArticles()
         {
             var listNewsArticles = new List<NewsArticle>();
@@ -59,40 +65,31 @@ namespace DataAccessObjects
 
         }
 
-        public static void DeleteNewsArticle(NewsArticle newsArticle)
+        public static void DeleteNewsArticle(string id)
         {
             try
             {
                 using var context = new FunewsManagementContext();
 
-            
                 var newsArticleToDelete = context.NewsArticles
-                    .Include(a => a.Tags)   
-                    .Include(a => a.Category) 
-                    .SingleOrDefault(a => a.NewsArticleId == newsArticle.NewsArticleId);
+                    .Include(a => a.NewsTags) // Bao gồm NewsTags
+                    .ThenInclude(nt => nt.Tag) // Bao gồm Tag để tránh lỗi
+                    .FirstOrDefault(a => a.NewsArticleId == id);
 
-              
-                if (newsArticleToDelete != null)
+                if (newsArticleToDelete == null)
                 {
-               
-                    foreach (var tag in newsArticleToDelete.Tags.ToList())
-                    {
-                        context.Tags.Remove(tag);
-                    }
-                   
-                    if (newsArticleToDelete.Category != null)
-                    {
-                        context.Categories.Remove(newsArticleToDelete.Category); 
-                    }
-       
-                    context.NewsArticles.Remove(newsArticleToDelete);
+                    throw new Exception($"News article with ID {id} not found.");
+                }
 
-                    context.SaveChanges();
-                }
-                else
+                // Xóa tất cả các NewsTag liên quan trước
+                if (newsArticleToDelete.NewsTags != null && newsArticleToDelete.NewsTags.Any())
                 {
-                    throw new Exception("News article not found.");
+                    context.NewsTags.RemoveRange(newsArticleToDelete.NewsTags);
                 }
+
+                // Xóa NewsArticle
+                context.NewsArticles.Remove(newsArticleToDelete);
+                context.SaveChanges();
             }
             catch (Exception e)
             {
@@ -101,10 +98,20 @@ namespace DataAccessObjects
         }
 
 
+
         public static NewsArticle GetNewsArticleById(int id)
         {
             using var db = new FunewsManagementContext();
             return db.NewsArticles.FirstOrDefault(a => a.NewsArticleId.Equals(id));
         }
+
+        public async Task<List<NewsArticle>> GetNewsByDateRangeAsync(DateTime startDate, DateTime endDate)
+        {
+            return await _context.NewsArticles
+                .Where(n => n.CreatedDate >= startDate && n.CreatedDate <= endDate)
+                .OrderByDescending(n => n.CreatedDate)
+                .ToListAsync();
+        }
+
     }
 }

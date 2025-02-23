@@ -16,9 +16,9 @@ namespace Services
             iNewsArticleRepository.AddNewsArticle(newsArticle);
         }
 
-        public void DeleteNewsArticle(NewsArticle newsArticle)
+        public void DeleteNewsArticle(string id)
         {
-            iNewsArticleRepository.DeleteNewsArticle(newsArticle);
+            iNewsArticleRepository.DeleteNewsArticle(id);
         }
 
         public NewsArticle GetNewsArticleById(int id)
@@ -29,6 +29,10 @@ namespace Services
         public List<NewsArticle> GetNewsArticles()
         {
             return iNewsArticleRepository.GetNewsArticles();
+        }
+        public async Task<List<NewsArticle>> GetNewsByDateRangeAsync(DateTime startDate, DateTime endDate)
+        {
+            return await iNewsArticleRepository.GetNewsByDateRangeAsync(startDate, endDate);
         }
 
         public void UpdateNewsArticle(NewsArticle newsArticle)

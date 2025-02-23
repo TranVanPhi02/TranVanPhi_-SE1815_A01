@@ -60,5 +60,39 @@ namespace DataAccessObjects
                 await _context.SaveChangesAsync();
             }
         }
+        // Get all accounts (Admin only)
+        public async Task<IQueryable<SystemAccount>> GetAllAccountsAsync()
+        {
+            return _context.SystemAccounts;
+        }
+        public async Task DisableUserAsync(short accountId)
+        {
+            var account = await _context.SystemAccounts
+                                         .FirstOrDefaultAsync(a => a.AccountId == accountId);
+            if (account != null)
+            {
+                account.IsDisabled = true;
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task EnableUserAsync(short accountId)
+        {
+            var account = await _context.SystemAccounts
+                                         .FirstOrDefaultAsync(a => a.AccountId == accountId);
+            if (account != null)
+            {
+                account.IsDisabled = false;
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task<bool> IsUserDisabledAsync(short accountId)
+        {
+            var account = await _context.SystemAccounts
+                                         .FirstOrDefaultAsync(a => a.AccountId == accountId);
+            return account?.IsDisabled ?? false;
+        }
+
     }
 }

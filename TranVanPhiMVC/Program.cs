@@ -11,6 +11,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<INewsArticleService, NewsArticleService>();
+builder.Services.AddScoped<INewsArticleRepository, NewsArticleRepository>();
 builder.Services.AddScoped<ITagService, TagService>();
 builder.Services.AddScoped<ISystemAccountService, SystemAccountService>();
 builder.Services.AddScoped<ISystemAccountRepository, SystemAccountRepository>();

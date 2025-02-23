@@ -150,27 +150,21 @@ namespace TranVanPhiMVC.Controllers
         // POST: Categories/Delete/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(short id)
+        public async Task<IActionResult> DeleteConfirmed(Category category)
         {
-            var category = await _context.Categories.FindAsync(id);
+            var categoryToDelete = await _context.Categories.FindAsync(category.CategoryId);
 
-            if (category != null)
+            if (categoryToDelete == null)
             {
-            
-                var categoryInUse = await _context.NewsArticles.AnyAsync(na => na.CategoryId == category.CategoryId);
-                if (categoryInUse)
-                {
-                    ViewBag.ErrorMessage = "This category cannot be deleted because it is in use by one or more news articles.";
-                    return View("Delete", category);  
-                }
-
-                _context.Categories.Remove(category);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                return NotFound();
             }
 
-            return NotFound();
+            _context.Categories.Remove(categoryToDelete);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Index));
         }
+
 
 
         private bool CategoryExists(short id)

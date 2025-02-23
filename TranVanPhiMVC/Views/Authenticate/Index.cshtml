@@ -1,5 +1,46 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model IEnumerable<BusinessObjects.SystemAccount>
+
 @{
+    ViewData["Title"] = "Manage Accounts";
 }
+
+<h1>Manage Accounts</h1>
+
+
+<table class="table">
+    <thead>
+        <tr>
+          
+            <th>Account Name</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Status</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+             
+                <td>@item.AccountName</td>
+                <td>@item.AccountEmail</td>
+                <td>
+                    @(item.AccountRole == 1 ? "Staff" :
+                        item.AccountRole == 2 ? "Lecturer" : "Admin")
+                </td>
+                <td>
+                    @(item.IsDisabled ? "Disabled" : "Active")
+                </td>
+                <td>
+                    <form asp-action="ToggleActivation" method="post">
+                        <input type="hidden" name="id" value="@item.AccountId" />
+                        <button type="submit" class="btn @(item.IsDisabled ? "btn-success" : "btn-danger")">
+                            @(item.IsDisabled ? "Enable" : "Disable")
+                        </button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

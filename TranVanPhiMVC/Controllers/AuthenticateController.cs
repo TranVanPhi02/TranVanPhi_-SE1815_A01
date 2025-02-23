@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Services;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
 
 namespace TranVanPhiMVC.Controllers
 {
@@ -17,6 +18,20 @@ namespace TranVanPhiMVC.Controllers
             _systemAccountService = systemAccountService;
         }
 
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Index()
+        {
+            var accounts = await _systemAccountService.GetAllAccountsAsync();
+
+            if (accounts == null || !accounts.Any())  
+            {
+                ViewBag.ErrorMessage = "No accounts found.";
+            }
+
+            return View(accounts);
+        }
+
+    
         public IActionResult Login()
         {
             return View();
@@ -48,41 +63,68 @@ namespace TranVanPhiMVC.Controllers
                   return View();
               }
           }*/
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> ToggleActivation(short id)
+        {
+            var isDisabled = await _systemAccountService.IsUserDisabledAsync(id);
+            if (isDisabled)
+            {
+                await _systemAccountService.EnableUserAsync(id);
+                TempData["SuccessMessage"] = "User has been enabled.";
+            }
+            else
+            {
+                await _systemAccountService.DisableUserAsync(id);
+                TempData["SuccessMessage"] = "User has been disabled.";
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
 
         [HttpPost]
         public async Task<IActionResult> Login(string email, string password)
         {
-            var account = await _systemAccountService.LoginAsync(email, password);
-            if (account != null)
+            try
             {
-                // Add roles to the claims based on the account role
-                var roles = account.AccountRole == 1 ? new[] { "Staff" }
-                           : account.AccountRole == 2 ? new[] { "Lecturer" }
-                           : new[] { "Admin" };
+                var account = await _systemAccountService.LoginAsync(email, password);
 
-                var claims = new List<Claim>
+                if (account != null)
+                {
+                    // Xác định role dựa trên AccountRole
+                    string role = account.AccountRole switch
+                    {
+                        1 => "Staff",
+                        2 => "Lecturer",
+                        _ => "Admin"
+                    };
+
+                    var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, account.AccountName),
-                new Claim(ClaimTypes.NameIdentifier, account.AccountId.ToString())
+                new Claim(ClaimTypes.NameIdentifier, account.AccountId.ToString()),
+                new Claim(ClaimTypes.Role, role)
             };
 
-                claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
+                    var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                    var principal = new ClaimsPrincipal(identity);
 
-                // Create the claims identity and sign the user in
-                var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-                var principal = new ClaimsPrincipal(identity);
+                    await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
 
-                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
-
-                // Redirect to the Home page after successful login
-                return RedirectToAction("Index", "Home");
+                    return RedirectToAction("Index", "Home");
+                }
             }
-            else
+            catch (UnauthorizedAccessException) 
             {
-                ViewBag.ErrorMessage = "Invalid email or password!";
-                return View();  
+                ViewBag.ErrorMessage = "Your account has been disabled. Please contact the administrator.";
+                return View();
             }
+
+            ViewBag.ErrorMessage = "Invalid email or password!";
+            return View();
         }
+
+
+
         // Register GET action
         public IActionResult Register()
         {
@@ -113,7 +155,6 @@ namespace TranVanPhiMVC.Controllers
 
             await _systemAccountService.RegisterAsync(newAccount);
 
-            // Redirect to the login page after successful registration
             return RedirectToAction("Login", "SystemAccount");
         }
 
@@ -156,6 +197,7 @@ namespace TranVanPhiMVC.Controllers
 
             return View(updatedAccount); 
         }
+
         // Logout POST action
         [HttpPost]
         public async Task<IActionResult> Logout()
