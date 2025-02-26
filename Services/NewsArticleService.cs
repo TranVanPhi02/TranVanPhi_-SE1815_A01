@@ -10,34 +10,55 @@ namespace Services
 {
     public class NewsArticleService : INewsArticleService
     {
-        private readonly INewsArticleRepository iNewsArticleRepository;
+        private readonly INewsArticleRepository _newsArticleRepository;
+        public NewsArticleService(INewsArticleRepository newsArticleRepository)
+        {
+            _newsArticleRepository = newsArticleRepository;
+        }
         public void AddNewsArticle(NewsArticle newsArticle)
         {
-            iNewsArticleRepository.AddNewsArticle(newsArticle);
+            _newsArticleRepository.AddNewsArticle(newsArticle);
         }
 
         public void DeleteNewsArticle(string id)
         {
-            iNewsArticleRepository.DeleteNewsArticle(id);
+            _newsArticleRepository.DeleteNewsArticle(id);
         }
 
         public NewsArticle GetNewsArticleById(int id)
         {
-            return iNewsArticleRepository.GetNewsArticleById(id);
+            return _newsArticleRepository.GetNewsArticleById(id);
         }
 
         public List<NewsArticle> GetNewsArticles()
         {
-            return iNewsArticleRepository.GetNewsArticles();
+            return _newsArticleRepository.GetNewsArticles();
         }
+
         public async Task<List<NewsArticle>> GetNewsByDateRangeAsync(DateTime startDate, DateTime endDate)
         {
-            return await iNewsArticleRepository.GetNewsByDateRangeAsync(startDate, endDate);
+            // Kiểm tra xem repository có được khởi tạo không
+            if (_newsArticleRepository == null)
+            {
+                throw new Exception("NewsArticleRepository is not initialized.");
+            }
+
+            // Kiểm tra xem dữ liệu có hợp lệ không
+            var result = await _newsArticleRepository.GetNewsByDateRangeAsync(startDate, endDate);
+
+            if (result == null || !result.Any())
+            {
+                // Trả về danh sách rỗng nếu không có kết quả
+                return new List<NewsArticle>();
+            }
+
+            return result;
         }
+
 
         public void UpdateNewsArticle(NewsArticle newsArticle)
         {
-            iNewsArticleRepository.UpdateNewsArticle(newsArticle);
+            _newsArticleRepository.UpdateNewsArticle(newsArticle);
         }
     }
 }

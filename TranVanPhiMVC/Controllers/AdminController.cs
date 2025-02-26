@@ -15,25 +15,47 @@ namespace TranVanPhiMVC.Controllers
 
         public AdminController(INewsArticleService newsArticleService)
         {
-            _newsArticleService = newsArticleService;
+            _newsArticleService = newsArticleService ?? throw new ArgumentNullException(nameof(newsArticleService));
         }
 
         public IActionResult Report()
         {
-            return View();
+            return View(new List<NewsArticle>()); 
         }
 
         [HttpPost]
-        public async Task<IActionResult> GenerateReport(DateTime startDate, DateTime endDate)
+        public async Task<IActionResult> GenerateReport(DateTime? startDate, DateTime? endDate)
         {
+            if (!startDate.HasValue || !endDate.HasValue)
+            {
+                ViewBag.ErrorMessage = "Please select both start and end dates!";
+                return View("Report"); 
+            }
+
             if (startDate > endDate)
             {
                 ViewBag.ErrorMessage = "Start date must be earlier than End date!";
                 return View("Report");
             }
 
-            var reportData = await _newsArticleService.GetNewsByDateRangeAsync(startDate, endDate);
-            return View("Report", reportData);
+            try
+            {
+                var reportData = await _newsArticleService.GetNewsByDateRangeAsync(startDate.Value, endDate.Value);
+
+                if (reportData == null || !reportData.Any())
+                {
+                    ViewBag.ErrorMessage = "No news articles found for the selected date range.";
+                }
+
+                return View("Report", reportData); 
+            }
+            catch (Exception ex)
+            {
+                ViewBag.ErrorMessage = $"An error occurred: {ex.Message}";
+                return View("Report");
+            }
         }
+
+
     }
 }

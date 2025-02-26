@@ -6,11 +6,9 @@
 
 <h1>Manage Accounts</h1>
 
-
 <table class="table">
     <thead>
         <tr>
-          
             <th>Account Name</th>
             <th>Email</th>
             <th>Role</th>
@@ -22,7 +20,6 @@
         @foreach (var item in Model)
         {
             <tr>
-             
                 <td>@item.AccountName</td>
                 <td>@item.AccountEmail</td>
                 <td>
@@ -33,12 +30,19 @@
                     @(item.IsDisabled ? "Disabled" : "Active")
                 </td>
                 <td>
-                    <form asp-action="ToggleActivation" method="post">
-                        <input type="hidden" name="id" value="@item.AccountId" />
-                        <button type="submit" class="btn @(item.IsDisabled ? "btn-success" : "btn-danger")">
-                            @(item.IsDisabled ? "Enable" : "Disable")
-                        </button>
-                    </form>
+                    @if (item.AccountRole != 3) 
+                    {
+                        <form asp-action="ToggleActivation" method="post">
+                            <input type="hidden" name="id" value="@item.AccountId" />
+                            <button type="submit" class="btn @(item.IsDisabled ? "btn-success" : "btn-danger")">
+                                @(item.IsDisabled ? "Enable" : "Disable")
+                            </button>
+                        </form>
+                    }
+                    else
+                    {
+                        <span>Cannot modify Admin</span> 
+                    }
                 </td>
             </tr>
         }

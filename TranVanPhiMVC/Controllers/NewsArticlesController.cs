@@ -9,17 +9,20 @@ using BusinessObjects;
 using Microsoft.AspNetCore.Authorization;
 using Services;
 
+using static TranVanPhiMVC.Extensions.Mail;
+
 namespace TranVanPhiMVC.Controllers
 {
     public class NewsArticlesController : Controller
     {
         private readonly FunewsManagementContext _context;
         private readonly INewsArticleService _newsArticleService;
-
-        public NewsArticlesController(FunewsManagementContext context, INewsArticleService newsArticleService)
+        private readonly IEmailSender _emailSender;
+        public NewsArticlesController(IEmailSender emailSender, FunewsManagementContext context, INewsArticleService newsArticleService)
         {
+            _emailSender = emailSender;
             _context = context;
-            _newsArticleService = newsArticleService ?? throw new ArgumentNullException(nameof(newsArticleService)); // Add null check here for better debugging
+            _newsArticleService = newsArticleService ?? throw new ArgumentNullException(nameof(newsArticleService)); 
         }
 
 
@@ -65,8 +68,6 @@ namespace TranVanPhiMVC.Controllers
         }
 
         // POST: NewsArticles/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("NewsArticleId,NewsTitle,Headline,CreatedDate,NewsContent,NewsSource,CategoryId,NewsStatus,CreatedById,UpdatedById,ModifiedDate")] NewsArticle newsArticle)
@@ -75,8 +76,25 @@ namespace TranVanPhiMVC.Controllers
             {
                 _context.Add(newsArticle);
                 await _context.SaveChangesAsync();
+
+                // Gửi email thông báo cho Lecturer sau khi tạo bài viết thành công
+                string emailSubject = $"New News Article Created: {newsArticle.NewsTitle}";
+                string emailBody = $"A new news article titled '{newsArticle.NewsTitle}' has been created. Please review it.";
+                var lecturers = _context.SystemAccounts
+          .Where(a => a.AccountRole.HasValue && a.AccountRole.Value == 2) 
+          .ToList();
+
+
+                foreach (var lecturer in lecturers)
+                {
+                    await _emailSender.SendEmailAsync(lecturer.AccountEmail, emailSubject, emailBody);
+                }
+
+
+                TempData["SuccessMessage"] = "News article created successfully and email sent to the lecturer.";
                 return RedirectToAction(nameof(Index));
             }
+
             ViewData["CategoryId"] = new SelectList(_context.Categories, "CategoryId", "CategoryDesciption", newsArticle.CategoryId);
             ViewData["CreatedById"] = new SelectList(_context.SystemAccounts, "AccountId", "AccountId", newsArticle.CreatedById);
             return View(newsArticle);

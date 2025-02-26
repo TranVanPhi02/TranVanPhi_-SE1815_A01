@@ -6,6 +6,7 @@ using Services;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using TranVanPhiMVC.Extensions;
 
 namespace TranVanPhiMVC.Controllers
 {
@@ -37,49 +38,38 @@ namespace TranVanPhiMVC.Controllers
             return View();
         }
 
-        /*  [HttpPost]
-          public async Task<IActionResult> Login(string email, string password)
-          {
-              var account = await _systemAccountService.LoginAsync(email, password);
-              if (account != null)
-              {
 
-                  if (account.AccountRole == 1) // Staff
-                  {
-                      return RedirectToAction("Index", "Home");
-                  }
-                  else if (account.AccountRole == 2) // Lecturer
-                  {
-                      return RedirectToAction("Index", "Home");
-                  }
-                  else // Admin
-                  {
-                      return RedirectToAction("Index", "Home");
-                  }
-              }
-              else
-              {
-                  ViewBag.ErrorMessage = "Invalid email or password!";
-                  return View();
-              }
-          }*/
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> ToggleActivation(short id)
         {
-            var isDisabled = await _systemAccountService.IsUserDisabledAsync(id);
-            if (isDisabled)
+            var currentAccountId = User.GetUserId(); // Lấy ID tài khoản hiện tại (Admin)
+
+            try
             {
-                await _systemAccountService.EnableUserAsync(id);
-                TempData["SuccessMessage"] = "User has been enabled.";
+                var isDisabled = await _systemAccountService.IsUserDisabledAsync(id);
+
+                if (isDisabled)
+                {
+                    // Kích hoạt lại tài khoản
+                    await _systemAccountService.EnableUserAsync(id);
+                    TempData["SuccessMessage"] = "User has been enabled.";
+                }
+                else
+                {
+                    // Nếu Admin không cố gắng vô hiệu hóa chính tài khoản của mình
+                    await _systemAccountService.DisableUserAsync(id, currentAccountId);
+                    TempData["SuccessMessage"] = "User has been disabled.";
+                }
             }
-            else
+            catch (InvalidOperationException ex)
             {
-                await _systemAccountService.DisableUserAsync(id);
-                TempData["SuccessMessage"] = "User has been disabled.";
+                // Xử lý lỗi nếu Admin cố gắng vô hiệu hóa tài khoản của mình
+                TempData["ErrorMessage"] = ex.Message;
             }
 
             return RedirectToAction(nameof(Index));
         }
+
 
         [HttpPost]
         public async Task<IActionResult> Login(string email, string password)

@@ -105,13 +105,22 @@ namespace DataAccessObjects
             return db.NewsArticles.FirstOrDefault(a => a.NewsArticleId.Equals(id));
         }
 
+
+   
         public async Task<List<NewsArticle>> GetNewsByDateRangeAsync(DateTime startDate, DateTime endDate)
         {
+            if (_context == null)
+            {
+                throw new NullReferenceException("_context is null. Ensure DbContext is properly initialized.");
+            }
+
             return await _context.NewsArticles
-                .Where(n => n.CreatedDate >= startDate && n.CreatedDate <= endDate)
+                .Where(x => x.CreatedDate >= startDate && x.CreatedDate <= endDate)
                 .OrderByDescending(n => n.CreatedDate)
                 .ToListAsync();
         }
+
+
 
     }
 }

@@ -60,11 +60,7 @@ namespace Services
             await _systemAccountRepository.AddOrUpdateAccountAsync(account);
         }
 
-        public async Task DisableUserAsync(short accountId)
-        {
-            await _systemAccountRepository.DisableUserAsync(accountId);
-        }
-
+     
         public async Task EnableUserAsync(short accountId)
         {
             await _systemAccountRepository.EnableUserAsync(accountId);
@@ -73,6 +69,11 @@ namespace Services
         public async Task<bool> IsUserDisabledAsync(short accountId)
         {
             return await _systemAccountRepository.IsUserDisabledAsync(accountId);
+        }
+
+        public async Task DisableUserAsync(short accountId, short currentAccountId)
+        {
+            await _systemAccountRepository.DisableUserAsync(accountId, currentAccountId);
         }
     }
 }

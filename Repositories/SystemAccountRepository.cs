@@ -36,10 +36,7 @@ public class SystemAccountRepository : ISystemAccountRepository
         return _systemAccountDAO.GetAllAccountsAsync();
     }
 
-    public async Task DisableUserAsync(short accountId)
-    {
-        await _systemAccountDAO.DisableUserAsync(accountId);
-    }
+ 
 
     public async Task EnableUserAsync(short accountId)
     {
@@ -49,5 +46,10 @@ public class SystemAccountRepository : ISystemAccountRepository
     public async Task<bool> IsUserDisabledAsync(short accountId)
     {
         return await _systemAccountDAO.IsUserDisabledAsync(accountId);
+    }
+
+    public async Task DisableUserAsync(short accountId, short currentAccountId)
+    {
+        await _systemAccountDAO.DisableUserAsync(accountId, currentAccountId);
     }
 }

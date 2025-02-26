@@ -11,7 +11,8 @@ namespace BusinessObjects
         public string? NewsArticleID { get; set; }
         public int TagID { get; set; }
 
-        public virtual NewsArticle? NewsArticle { get; set; }
-        public virtual Tag? Tag { get; set; }
+        public virtual NewsArticle? NewsArticle { get; set; } = null;  // Khởi tạo null để tránh lỗi
+        public virtual Tag? Tag { get; set; } = null;  // Khởi tạo null để tránh lỗi
     }
+
 }

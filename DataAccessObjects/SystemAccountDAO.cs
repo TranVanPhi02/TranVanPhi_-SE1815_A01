@@ -65,12 +65,23 @@ namespace DataAccessObjects
         {
             return _context.SystemAccounts;
         }
-        public async Task DisableUserAsync(short accountId)
+        // Disable a user - Prevent Admin from disabling their own account
+        public async Task DisableUserAsync(short accountId, short currentAccountId)
         {
             var account = await _context.SystemAccounts
                                          .FirstOrDefaultAsync(a => a.AccountId == accountId);
-            if (account != null)
+
+            var currentAccount = await _context.SystemAccounts
+                                                .FirstOrDefaultAsync(a => a.AccountId == currentAccountId);
+
+            // Prevent disabling if the account is Admin and is trying to disable their own account
+            if (account != null && currentAccount != null)
             {
+                if (currentAccount.AccountRole == 3 && account.AccountId == currentAccountId) // Assuming AccountRole == 1 is Admin
+                {
+                    throw new InvalidOperationException("You cannot disable your own account.");
+                }
+
                 account.IsDisabled = true;
                 await _context.SaveChangesAsync();
             }
